@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 
 // PR
 @ExtendWith(MockitoExtension.class)
-public class LibraryManagerTest {
+class LibraryManagerTest {
 
     @Mock
     private NotificationService notificationService;
@@ -27,19 +27,19 @@ public class LibraryManagerTest {
     private LibraryManager libraryManager;
 
     @Test
-    public void getAvailableCopiesNegativeTest() {
+    void getAvailableCopiesReturnsZeroWhenBookNotExists() {
         assertEquals(0, libraryManager.getAvailableCopies("book"));
     }
 
     @Test
-    public void addBookPositiveTest() {
+    void addBookAddsCorrectNumberOfCopies() {
         libraryManager.addBook("book1", 3);
 
         assertEquals(3, libraryManager.getAvailableCopies("book1"));
     }
 
     @Test
-    public void duplicateAddBookPositiveTest() {
+    void addBookAccumulatesCopiesWhenBookAlreadyExists() {
         libraryManager.addBook("book1", 3);
         libraryManager.addBook("book1", 2);
 
@@ -47,7 +47,7 @@ public class LibraryManagerTest {
     }
 
     @Test
-    public void borrowBookUserInactiveTest() {
+    void borrowBookFailsWhenUserInactive() {
         when(userService.isUserActive("user1")).thenReturn(false);
 
         assertFalse(libraryManager.borrowBook("book1", "user1"));
@@ -55,7 +55,7 @@ public class LibraryManagerTest {
     }
 
     @Test
-    public void borrowBookPositiveTest() {
+    void borrowBookSucceedsWhenUserActiveAndBookAvailable() {
         when(userService.isUserActive("user1")).thenReturn(true);
 
         libraryManager.addBook("book1", 3);
@@ -67,7 +67,7 @@ public class LibraryManagerTest {
 
     @ParameterizedTest
     @ValueSource(ints = {-1, 0})
-    public void borrowBookNegativeOrDefaultBooks(int quantity) {
+    void borrowBookFailsWhenBookQuantityIsNonPositive(int quantity) {
         when(userService.isUserActive("user1")).thenReturn(true);
 
         libraryManager.addBook("book1", quantity);
@@ -76,7 +76,7 @@ public class LibraryManagerTest {
     }
 
     @Test
-    public void returnBookPositiveTest() {
+    void returnBookSucceedsWhenUserActiveAndBookWasBorrowed() {
         when(userService.isUserActive("user1")).thenReturn(true);
 
         libraryManager.addBook("book1", 1);
@@ -87,15 +87,23 @@ public class LibraryManagerTest {
         verify(notificationService).notifyUser("user1", "You have returned the book: book1");
     }
 
-    @ParameterizedTest
-    @CsvSource({
-        "book1, user1",
-        "book, user"
-    })
-    public void returnBookNegativeTest(String book, String user) {
+    @Test
+    void returnBookFailsWhenBookDoesNotExistInLibrary() {
+        assertFalse(libraryManager.returnBook("nonexistentBook", "user1"));
+    }
+
+    @Test
+    void returnBookFailsWhenUserDidNotBorrowTheBook() {
         libraryManager.addBook("book1", 1);
 
-        assertFalse(libraryManager.returnBook(book, user));
+        assertFalse(libraryManager.returnBook("book1", "user1"));
+    }
+
+    @Test
+    void returnBookFailsWhenUserHasNoBorrowedBooksRecord() {
+        libraryManager.addBook("book1", 1);
+
+        assertFalse(libraryManager.returnBook("book1", "user2"));
     }
 
     @ParameterizedTest
@@ -107,12 +115,12 @@ public class LibraryManagerTest {
         "0, false, false, 0.0",
         "1, true, true, 0.6"
     })
-    public void calculateLateFeePositiveTest(int days, boolean bestseller, boolean premium, double expected) {
+    void calculateDynamicLateFeeReturnsExpectedValues(int days, boolean bestseller, boolean premium, double expected) {
         assertEquals(expected, libraryManager.calculateDynamicLateFee(days, bestseller, premium));
     }
 
     @Test
-    public void calculateLateFeePositiveTest() {
+    void calculateDynamicLateFeeThrowsExceptionForNegativeDays() {
         assertThrows(IllegalArgumentException.class, () ->
             libraryManager.calculateDynamicLateFee(-1, false, false)
         );
