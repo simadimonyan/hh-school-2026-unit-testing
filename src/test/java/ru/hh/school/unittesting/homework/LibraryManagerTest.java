@@ -8,9 +8,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.hh.school.unittesting.homework.LibraryManager;
-import ru.hh.school.unittesting.homework.NotificationService;
-import ru.hh.school.unittesting.homework.UserService;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
