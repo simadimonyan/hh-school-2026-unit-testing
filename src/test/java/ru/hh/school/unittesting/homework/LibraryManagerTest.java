@@ -93,6 +93,16 @@ class LibraryManagerTest {
     }
 
     @Test
+    void returnBookFailsWhenDifferentUserBorrowTheBook() {
+        when(userService.isUserActive("user1")).thenReturn(true);
+
+        libraryManager.addBook("book1", 1);
+        libraryManager.borrowBook("book1", "user1");
+
+        assertFalse(libraryManager.returnBook("book1", "user2"));
+    }
+
+    @Test
     void returnBookFailsWhenUserDidNotBorrowTheBook() {
         libraryManager.addBook("book1", 1);
 
